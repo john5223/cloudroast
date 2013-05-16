@@ -18,6 +18,14 @@ import os
 import sys
 
 import test_repo
+import cloudcafe
+import platform
+import shutil
+
+# These imports are only possible on Linux/OSX
+if platform.system().lower() != 'windows':
+    import pwd
+    import grp
 
 try:
     from setuptools import setup, find_packages
@@ -37,17 +45,25 @@ setup(
     long_description='{0}\n\n{1}'.format(
         open('README.md').read(),
         open('HISTORY.md').read()),
+    name='cloudcafe',
+    version=cloudcafe.__version__,
+    description='CloudCAFE is an implementation of the Open CAFE Framework specifically designed to test deployed versions of OpenStack',
+    long_description='{0}\n\n{1}'.format(
+        open('README.md').read(),
+        open('HISTORY.rst').read()),
     author='Rackspace Cloud QE',
     author_email='cloud-cafe@lists.rackspace.com',
     url='http://rackspace.com',
     packages=find_packages(exclude=[]),
     package_data={'': ['LICENSE', 'NOTICE']},
     package_dir={'test_repo': 'test_repo'},
+    package_dir={'cloudcafe': 'cloudcafe'},
     include_package_data=True,
     install_requires=requires,
     license=open('LICENSE').read(),
     zip_safe=False,
     #https://the-hitchhikers-guide-to-packaging.readthedocs.org/en/latest/specification.html
+    #https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=(
         'Development Status :: 1 - Planning',
         'Intended Audience :: Developers',
@@ -57,6 +73,11 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        #'Programming Language :: Python :: 3',
+        #'Programming Language :: Python :: 3.0',
+        #'Programming Language :: Python :: 3.1',
+        #'Programming Language :: Python :: 3.2',
+        #'Programming Language :: Python :: 3.3',
     )
 )
 
@@ -82,7 +103,45 @@ else:
                          "\t\t    \_________________/",
                          "\t\t     === CloudRoast ===",
                          "\t\t= A CloudCAFE Test Repository ="]))
+        print('\n'.join(["\t\t   _ _ _",
+                         "\t\t  ( `   )_ ",
+                         "\t\t (    )   `)  _",
+                         "\t\t(____(__.___`)__)",
+                         "\t\t",
+                         "\t\t    ( (",
+                         "\t\t       ) )",
+                         "\t\t    .........    ",
+                         "\t\t    |       |___ ",
+                         "\t\t    |       |_  |",
+                         "\t\t    |  :-)  |_| |",
+                         "\t\t    |       |___|",
+                         "\t\t    |_______|",
+                         "\t\t=== CloudCAFE ==="]))
+        print("========================================================")
+        print("CloudCAFE Framework installed")
+        print("========================================================")
     else:
         # State file
         temp = open("~install", "w")
         temp.close()
+
+        # Get uid and gid of the current user to set permissions (Linux/OSX only)
+        if platform.system().lower() != 'windows':
+            sudo_user = os.getenv("SUDO_USER")
+            uid = pwd.getpwnam(sudo_user).pw_uid
+            gid = pwd.getpwnam(sudo_user).pw_gid
+    
+        config_dirs = os.listdir("configs")
+        for dir in config_dirs:
+            if not os.path.exists("{0}/{1}".format(config_dir, dir)):
+                print("Installing configurations for: {0}".format("{0}/{1}".format(config_dir, dir)))
+                os.makedirs("{0}/{1}".format(config_dir, dir))
+                # Fix the directory permissions
+                if platform.system().lower() != 'windows':
+                    os.chown("{0}/{1}".format(config_dir, dir), uid, gid)
+            for file in os.listdir("configs/{0}".format(dir)):
+                print("Installing {0}/{1}/{2}".format(config_dir, dir, file))
+                shutil.copy2("configs/{0}/{1}".format(dir, file), "{0}/{1}/{2}".format(config_dir, dir, file))
+                # Fix the directory permissions
+                if platform.system().lower() != 'windows':
+                    os.chown("{0}/{1}/{2}".format(config_dir, dir, file), uid, gid)
